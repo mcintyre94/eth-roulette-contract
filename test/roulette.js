@@ -410,4 +410,32 @@ describe("calculateReturnMultiple", function () {
       assert.strictEqual(result2, 0);
     });
   });
+
+  describe("inside bets: line", function () {
+    const betType = 105;
+
+    it("wins for any of 6 numbers (2 rows)", async function () {
+      const betParam = 1; // Should match 1, 2, 3, 4, 5, 6
+      const result1 = await rouletteContract.calculateReturnMultiple(1, betType, betParam);
+      assert.strictEqual(result1, 6);
+      const result2 = await rouletteContract.calculateReturnMultiple(2, betType, betParam);
+      assert.strictEqual(result2, 6);
+      const result3 = await rouletteContract.calculateReturnMultiple(3, betType, betParam);
+      assert.strictEqual(result3, 6);
+      const result4 = await rouletteContract.calculateReturnMultiple(4, betType, betParam);
+      assert.strictEqual(result4, 6);
+      const result5 = await rouletteContract.calculateReturnMultiple(5, betType, betParam);
+      assert.strictEqual(result5, 6);
+      const result6 = await rouletteContract.calculateReturnMultiple(6, betType, betParam);
+      assert.strictEqual(result6, 6);
+    });
+
+    it("loses for anything else", async function () {
+      const betParam = 1; // Should match 1, 2, 3, 4, 5, 6
+      const result1 = await rouletteContract.calculateReturnMultiple(0, betType, betParam);
+      assert.strictEqual(result1, 0);
+      const result2 = await rouletteContract.calculateReturnMultiple(7, betType, betParam);
+      assert.strictEqual(result2, 0);
+    });
+  });
 });
