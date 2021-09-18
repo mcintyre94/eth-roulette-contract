@@ -326,6 +326,42 @@ describe("calculateReturnMultiple", function () {
       const betParam = 1;
       const result = await rouletteContract.calculateReturnMultiple(spin, betType, betParam);
       assert.strictEqual(result, 0);
-    })
-  })
+    });
+  });
+
+  describe("inside bets: horizontal split", function () {
+    const betType = 101;
+
+    it("wins for either of two horizontally adjacent squares", async function () {
+      const betParam = 1; // Should match 1 or 2
+      const result1 = await rouletteContract.calculateReturnMultiple(1, betType, betParam);
+      assert.strictEqual(result1, 18);
+      const result2 = await rouletteContract.calculateReturnMultiple(2, betType, betParam);
+      assert.strictEqual(result2, 18);
+    });
+
+    it("loses for anything else", async function () {
+      const betParam = 1; // Should match 1 or 2
+      const result = await rouletteContract.calculateReturnMultiple(3, betType, betParam);
+      assert.strictEqual(result, 0);
+    });
+  });
+
+  describe("inside bets: vertical split", function () {
+    const betType = 102;
+
+    it("wins for either of two vertically adjacent squares", async function () {
+      const betParam = 1; // Should match 1 or 4
+      const result1 = await rouletteContract.calculateReturnMultiple(1, betType, betParam);
+      assert.strictEqual(result1, 18);
+      const result2 = await rouletteContract.calculateReturnMultiple(4, betType, betParam);
+      assert.strictEqual(result2, 18);
+    });
+
+    it("loses for anything else", async function () {
+      const betParam = 1; // Should match 1 or 4
+      const result = await rouletteContract.calculateReturnMultiple(2, betType, betParam);
+      assert.strictEqual(result, 0);
+    });
+  });
 });

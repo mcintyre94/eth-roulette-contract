@@ -77,6 +77,16 @@ contract Roulette {
             // Straight up bet
             bool win = rouletteSpin == uint8(betParam);
             return win? 36 : 0; 
+        } else if(betType == 101) {
+            // Horizontal split
+            uint8 splitLeft = uint8(betParam);
+            bool win = rouletteSpin == splitLeft || rouletteSpin == splitLeft + 1;
+            return win? 18 : 0;
+        } else if(betType == 102) {
+            // Vertical split
+            uint8 splitTop = uint8(betParam);
+            bool win = rouletteSpin == splitTop || rouletteSpin == splitTop + 3;
+            return win? 18 : 0;
         }
         else {
             revert("Bet type not implemented, sorry!");
