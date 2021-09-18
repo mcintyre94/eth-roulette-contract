@@ -386,4 +386,28 @@ describe("calculateReturnMultiple", function () {
       assert.strictEqual(result2, 0);
     });
   });
+
+  describe("inside bets: corner", function () {
+    const betType = 104;
+
+    it("wins for any of 4 touching numbers", async function () {
+      const betParam = 1; // Should match 1, 2, 4, 5
+      const result1 = await rouletteContract.calculateReturnMultiple(1, betType, betParam);
+      assert.strictEqual(result1, 8);
+      const result2 = await rouletteContract.calculateReturnMultiple(2, betType, betParam);
+      assert.strictEqual(result2, 8);
+      const result3 = await rouletteContract.calculateReturnMultiple(4, betType, betParam);
+      assert.strictEqual(result3, 8);
+      const result4 = await rouletteContract.calculateReturnMultiple(5, betType, betParam);
+      assert.strictEqual(result4, 8);
+    });
+
+    it("loses for anything else", async function () {
+      const betParam = 1; // Should match 1, 2, 4, 5
+      const result1 = await rouletteContract.calculateReturnMultiple(0, betType, betParam);
+      assert.strictEqual(result1, 0);
+      const result2 = await rouletteContract.calculateReturnMultiple(3, betType, betParam);
+      assert.strictEqual(result2, 0);
+    });
+  });
 });
