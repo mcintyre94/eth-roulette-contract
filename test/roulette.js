@@ -364,4 +364,26 @@ describe("calculateReturnMultiple", function () {
       assert.strictEqual(result, 0);
     });
   });
+
+  describe("inside bets: street", function () {
+    const betType = 103;
+
+    it("wins for any of 3 numbers in a row", async function () {
+      const betParam = 1; // Should match 1, 2, 3
+      const result1 = await rouletteContract.calculateReturnMultiple(1, betType, betParam);
+      assert.strictEqual(result1, 12);
+      const result2 = await rouletteContract.calculateReturnMultiple(2, betType, betParam);
+      assert.strictEqual(result2, 12);
+      const result3 = await rouletteContract.calculateReturnMultiple(3, betType, betParam);
+      assert.strictEqual(result3, 12);
+    })
+
+    it("loses for anything else", async function () {
+      const betParam = 1; // Should match 1, 2, 3
+      const result1 = await rouletteContract.calculateReturnMultiple(0, betType, betParam);
+      assert.strictEqual(result1, 0);
+      const result2 = await rouletteContract.calculateReturnMultiple(4, betType, betParam);
+      assert.strictEqual(result2, 0);
+    });
+  });
 });
