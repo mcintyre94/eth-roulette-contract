@@ -7,6 +7,8 @@ contract Roulette {
     uint8 private seed;
 
     mapping(uint8 => uint8) reds;
+    mapping(address => uint) public donations;
+    address[] public donationAddresses;
 
     event BalanceChanged(uint newBalance);
     event PlayerWon(uint8 requestId, uint8 spin, uint winAmount);
@@ -106,5 +108,20 @@ contract Roulette {
         else {
             revert("Bet type not implemented, sorry!");
         }
+    }
+
+    function donate() public payable {
+        require(msg.value > 0, "Sorry but you can't donate nothing!");
+
+        if(donations[msg.sender] == 0) {
+            donationAddresses.push(msg.sender);
+        }
+
+        donations[msg.sender] += msg.value;
+        emit BalanceChanged(address(this).balance);
+    }
+
+    function getDonationAddresses() view public returns (address[] memory) {
+        return donationAddresses;
     }
 }
