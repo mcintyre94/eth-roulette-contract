@@ -24,7 +24,7 @@ contract Roulette {
         }
     }
 
-    function spin(uint8 requestId, uint8 betType, int8 betParam) public payable {
+    function spin(uint8 requestId, uint8 betType, uint8 betParam) public payable {
         // pseudo-random with a seed
         uint8 rouletteSpin = uint8((block.difficulty + block.timestamp + seed) % 37);
         seed = rouletteSpin;
@@ -44,15 +44,15 @@ contract Roulette {
         emit BalanceChanged(address(this).balance);
     }
 
-    function calculateReturnMultiple(uint8 rouletteSpin, uint8 betType, int8 betParam) view public returns (uint8) {
+    function calculateReturnMultiple(uint8 rouletteSpin, uint8 betType, uint8 betParam) view public returns (uint8) {
         // Outside bets
         if(betType == 0) {
             // Black/Red
-            bool win = rouletteSpin > 0 && reds[rouletteSpin] == uint8(betParam); // 0 wins if Black, 1 wins if Red
+            bool win = rouletteSpin > 0 && reds[rouletteSpin] == betParam; // 0 wins if Black, 1 wins if Red
             return win? 2 : 0;
         } else if(betType == 1) {
             // Even/Odd
-            bool win = rouletteSpin > 0 && rouletteSpin % 2 == uint8(betParam); // 0 wins if Even, 1 wins if Odd
+            bool win = rouletteSpin > 0 && rouletteSpin % 2 == betParam; // 0 wins if Even, 1 wins if Odd
             return win? 2 : 0;
         } else if(betType == 2) {
             // Low/High
@@ -62,7 +62,7 @@ contract Roulette {
             return 0;
         } else if(betType == 3) {
             // One of 3 columns
-            bool win = rouletteSpin > 0 && rouletteSpin % 3 == uint8(betParam); // 1 wins if col 1, 2 wins if col 2, 0 wins if col3
+            bool win = rouletteSpin > 0 && rouletteSpin % 3 == betParam; // 1 wins if col 1, 2 wins if col 2, 0 wins if col3
             return win? 3 : 0;
         } else if(betType == 4) {
             // Low/Medium/High third
@@ -75,33 +75,32 @@ contract Roulette {
         // Inside bets
         else if(betType == 100) {
             // Straight up bet
-            bool win = rouletteSpin == uint8(betParam);
+            bool win = rouletteSpin == betParam;
             return win? 36 : 0; 
         } else if(betType == 101) {
             // Horizontal split
-            uint8 splitLeft = uint8(betParam);
-            bool win = rouletteSpin == splitLeft || rouletteSpin == splitLeft + 1;
+            // Param assumed to be on the left, so win for param or the number to its right (+1)
+            bool win = rouletteSpin == betParam || rouletteSpin == betParam + 1;
             return win? 18 : 0;
         } else if(betType == 102) {
             // Vertical split
-            uint8 splitTop = uint8(betParam);
-            bool win = rouletteSpin == splitTop || rouletteSpin == splitTop + 3;
+            // Param assumed to be top of the split, so win for param or the number below (+3)
+            bool win = rouletteSpin == betParam || rouletteSpin == betParam + 3;
             return win? 18 : 0;
         } else if(betType == 103) {
             // Street
-            uint8 splitLeft = uint8(betParam);
-            bool win = rouletteSpin >= splitLeft && rouletteSpin <= splitLeft + 2;
+            // Param assumed to be left number in the row, so win for param, param+1, param+3
+            bool win = rouletteSpin >= betParam && rouletteSpin <= betParam + 2;
             return win? 12 : 0;
         } else if(betType == 104) {
             // Corner
-            uint8 cornerTopLeft = uint8(betParam);
-            // Bet covers the param, the number to its right (+1), the number below (+3), the number below right (+4)
-            bool win = rouletteSpin == cornerTopLeft || rouletteSpin == cornerTopLeft + 1 || rouletteSpin == cornerTopLeft + 3 || rouletteSpin == cornerTopLeft + 4;
+            // Param assumed to be top left of the corner, so bet covers the param, the number to its right (+1), the number below (+3), the number below right (+4)
+            bool win = rouletteSpin == betParam || rouletteSpin == betParam + 1 || rouletteSpin == betParam + 3 || rouletteSpin == betParam + 4;
             return win? 8 : 0;
         } else if(betType == 105) {
             // Line (2 rows)
-            uint8 lineTopLeft = uint8(betParam);
-            bool win = rouletteSpin >= lineTopLeft && rouletteSpin <= lineTopLeft + 5;
+            // Param assumed to be the top left of the two rows, so win for param to param + 5 (eg 1-6)
+            bool win = rouletteSpin >= betParam && rouletteSpin <= betParam + 5;
             return win? 6 : 0;
         }
         else {
