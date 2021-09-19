@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const assert = require('assert');
+const { hrtime } = require("process");
 
 describe("calculateReturnMultiple", function () {
   let rouletteContract;
@@ -461,64 +462,102 @@ describe("calculateReturnMultiple", function () {
       assert.strictEqual(result2, 0);
     });
   });
+});
 
-  describe("donations", function () {
-    let owner;
+describe("donations", function () {
+  let rouletteContract;
+  let owner;
 
-    before(async function () {
-      const signers = await ethers.getSigners();
-      owner = signers[0];
-    });
+  before(async function () {
+    const signers = await ethers.getSigners();
+    owner = signers[0];
+  });
 
-    beforeEach(async function () {
-      // Reset the contract after each test because this function is impure
-      const rouletteContractFactory = await ethers.getContractFactory("Roulette");
-      rouletteContract = await rouletteContractFactory.deploy();
-      await rouletteContract.deployed();
-    });
+  beforeEach(async function () {
+    // Reset the contract after each test because this function is impure
+    const rouletteContractFactory = await ethers.getContractFactory("Roulette");
+    rouletteContract = await rouletteContractFactory.deploy();
+    await rouletteContract.deployed();
+  });
 
-    it("should emit an event reflecting the new balance", async function () {
-      const amount = ethers.utils.parseEther("0.5");
-      await expect(rouletteContract.donate({value: amount}))
-        .to.emit(rouletteContract, 'BalanceChanged')
-        .withArgs(amount);
-    });
+  it("should emit an event reflecting the new balance", async function () {
+    const amount = ethers.utils.parseEther("0.5");
+    await expect(rouletteContract.donate({value: amount}))
+      .to.emit(rouletteContract, 'BalanceChanged')
+      .withArgs(amount);
+  });
 
-    it("should reject a value of 0", async function () {
-      const amount = ethers.utils.parseEther("0");
-      await expect(rouletteContract.donate({value: amount}))
-        .to.be.revertedWith("Sorry but you can't donate nothing!");
+  it("should reject a value of 0", async function () {
+    const amount = ethers.utils.parseEther("0");
+    await expect(rouletteContract.donate({value: amount}))
+      .to.be.revertedWith("Sorry but you can't donate nothing!");
 
-      const donationAddresses = await rouletteContract.getDonationAddresses();
-      assert.deepStrictEqual(donationAddresses, []);
-    });
+    const donationAddresses = await rouletteContract.getDonationAddresses();
+    assert.deepStrictEqual(donationAddresses, []);
+  });
 
-    it("should credit donations", async function () {
-      const amount = ethers.utils.parseEther("0.5");
+  it("should credit donations", async function () {
+    const amount = ethers.utils.parseEther("0.5");
 
-      // Make a donation of 0.5
-      const donateTxn1 = await rouletteContract.donate({value: amount});
-      await donateTxn1.wait();
+    // Make a donation of 0.5
+    const donateTxn1 = await rouletteContract.donate({value: amount});
+    await donateTxn1.wait();
 
-      // Should have our address recorded in donation addresses
-      const donationAddresses1 = await rouletteContract.getDonationAddresses();
-      assert.deepStrictEqual(donationAddresses1, [owner.address]);
+    // Should have our address recorded in donation addresses
+    const donationAddresses1 = await rouletteContract.getDonationAddresses();
+    assert.deepStrictEqual(donationAddresses1, [owner.address]);
 
-      // Should have 0.5 mapped to that address
-      const recordedAmount1 = await rouletteContract.donations(owner.address);
-      assert.deepStrictEqual(recordedAmount1, amount);
+    // Should have 0.5 mapped to that address
+    const recordedAmount1 = await rouletteContract.donations(owner.address);
+    assert.deepStrictEqual(recordedAmount1, amount);
 
-      // Make another donation of 0.5
-      const donateTxn2 = await rouletteContract.donate({value: amount});
-      await donateTxn2.wait();
+    // Make another donation of 0.5
+    const donateTxn2 = await rouletteContract.donate({value: amount});
+    await donateTxn2.wait();
 
-      // Should still have only one instance of our address recorded in donation addresses
-      const donationAddresses2 = await rouletteContract.getDonationAddresses();
-      assert.deepStrictEqual(donationAddresses2, [owner.address]);
+    // Should still have only one instance of our address recorded in donation addresses
+    const donationAddresses2 = await rouletteContract.getDonationAddresses();
+    assert.deepStrictEqual(donationAddresses2, [owner.address]);
 
-      // Should now have 1.0 mapped to that address
-      const recordedAmount2 = await rouletteContract.donations(owner.address);
-      assert.deepStrictEqual(recordedAmount2, ethers.utils.parseEther("1.0"));
-    });
+    // Should now have 1.0 mapped to that address
+    const recordedAmount2 = await rouletteContract.donations(owner.address);
+    assert.deepStrictEqual(recordedAmount2, ethers.utils.parseEther("1.0"));
+  });
+});
+
+describe("validateBets", function () {
+  let rouletteContract;
+
+  before(async function () {
+    const rouletteContractFactory = await ethers.getContractFactory("Roulette");
+    rouletteContract = await rouletteContractFactory.deploy();
+    await rouletteContract.deployed();
+  });
+
+  it("should reject if sum of bets is below expected", async function () {
+    const bets = [
+      {kind: 0, param: 0, amount: ethers.utils.parseEther("1.0")},
+      {kind: 0, param: 0, amount: ethers.utils.parseEther("1.0")},
+    ]
+    await expect(rouletteContract.validateBets(bets, ethers.utils.parseEther("5.0")))
+    .to.be.revertedWith("Input bet amounts do not add up to msg value");
+  });
+
+  it("should reject if sum of bets is above expected", async function () {
+    const bets = [
+      {kind: 0, param: 0, amount: ethers.utils.parseEther("1.0")},
+      {kind: 0, param: 0, amount: ethers.utils.parseEther("1.0")},
+    ]
+    await expect(rouletteContract.validateBets(bets, ethers.utils.parseEther("1.0")))
+    .to.be.revertedWith("Input bet amounts do not add up to msg value");
+  });
+
+  it("should be ok if sum of bets is equal to expected", async function () {
+    const bets = [
+      {kind: 0, param: 0, amount: ethers.utils.parseEther("1.0")},
+      {kind: 0, param: 0, amount: ethers.utils.parseEther("1.0")},
+    ]
+    
+    await rouletteContract.validateBets(bets, ethers.utils.parseEther("2.0"));
   });
 });

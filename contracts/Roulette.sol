@@ -14,6 +14,12 @@ contract Roulette {
     event PlayerWon(uint8 requestId, uint8 spin, uint winAmount);
     event PlayerLost(uint8 requestId, uint8 spin);
 
+    struct Bet {
+        uint8 kind;
+        uint8 param;
+        uint amount;
+    }
+
     constructor() payable {
         console.log("Contract starting", msg.value);
         emit BalanceChanged(msg.value);
@@ -26,10 +32,16 @@ contract Roulette {
         }
     }
 
-    function spin(uint8 requestId, uint8 betType, uint8 betParam) public payable {
+    function spin(uint8 requestId, Bet[] calldata bets) public payable {
+        validateBets(bets, msg.value);
+
         // pseudo-random with a seed
         uint8 rouletteSpin = uint8((block.difficulty + block.timestamp + seed) % 37);
         seed = rouletteSpin;
+
+        console.log("Received %d bets", bets.length);
+        uint8 betType = bets[0].kind;
+        uint8 betParam = bets[0].param;
 
         console.log("Spun the wheel! %d", rouletteSpin);
         uint8 multiple = calculateReturnMultiple(rouletteSpin, betType, betParam);
@@ -44,6 +56,14 @@ contract Roulette {
             emit PlayerLost(requestId, rouletteSpin);
         }
         emit BalanceChanged(address(this).balance);
+    }
+
+    function validateBets(Bet[] calldata bets, uint expectedTotal) pure public {
+        uint sum = 0;
+        for(uint i=0; i<bets.length; i++) {
+            sum += bets[i].amount;
+        }
+        require(sum == expectedTotal, "Input bet amounts do not add up to msg value");
     }
 
     function calculateReturnMultiple(uint8 rouletteSpin, uint8 betType, uint8 betParam) view public returns (uint8) {
