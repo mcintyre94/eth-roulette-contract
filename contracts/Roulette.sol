@@ -11,7 +11,7 @@ contract Roulette {
     address[] public donationAddresses;
 
     event BalanceChanged(uint newBalance);
-    event PlayerWon(uint8 requestId, uint8 spin, uint winAmount);
+    event PlayerPayout(uint8 requestId, uint8 spin, uint winAmount);
     event PlayerLost(uint8 requestId, uint8 spin);
 
     struct Bet {
@@ -32,26 +32,21 @@ contract Roulette {
         }
     }
 
-    function spin(uint8 requestId, Bet[] calldata bets) public payable {
+    function spin(uint8 requestId, Bet[] calldata bets) external payable {
         validateBets(bets, msg.value);
 
         // pseudo-random with a seed
         uint8 rouletteSpin = uint8((block.difficulty + block.timestamp + seed) % 37);
+        console.log("Spun the wheel! %d", rouletteSpin);
         seed = rouletteSpin;
 
-        console.log("Received %d bets", bets.length);
-        uint8 betType = bets[0].kind;
-        uint8 betParam = bets[0].param;
+        uint payout = calculatePayout(bets, rouletteSpin);
 
-        console.log("Spun the wheel! %d", rouletteSpin);
-        uint8 multiple = calculateReturnMultiple(rouletteSpin, betType, betParam);
-
-        if(multiple > 0) {
-            uint payout = msg.value * multiple;
+        if(payout > 0) {
             require(payout < address(this).balance, "Sorry, casino's bust!");
             (bool success,) = (msg.sender).call{value: payout}("");
             require(success, "Failed to pay out, sorry!");
-            emit PlayerWon(requestId, rouletteSpin, payout);
+            emit PlayerPayout(requestId, rouletteSpin, payout);
         } else {
             emit PlayerLost(requestId, rouletteSpin);
         }
@@ -64,6 +59,15 @@ contract Roulette {
             sum += bets[i].amount;
         }
         require(sum == expectedTotal, "Input bet amounts do not add up to msg value");
+    }
+
+    function calculatePayout(Bet[] calldata bets, uint8 rouletteSpin) view public returns (uint) {
+        uint payout = 0;
+        for(uint i=0; i<bets.length; i++) {
+            uint8 multiple = calculateReturnMultiple(rouletteSpin, bets[i].kind, bets[i].param);
+            payout += (multiple * bets[i].amount);
+        }
+        return payout;
     }
 
     function calculateReturnMultiple(uint8 rouletteSpin, uint8 betType, uint8 betParam) view public returns (uint8) {

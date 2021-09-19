@@ -561,3 +561,49 @@ describe("validateBets", function () {
     await rouletteContract.validateBets(bets, ethers.utils.parseEther("2.0"));
   });
 });
+
+describe("calculatePayout", function () {
+  let rouletteContract;
+
+  before(async function () {
+    const rouletteContractFactory = await ethers.getContractFactory("Roulette");
+    rouletteContract = await rouletteContractFactory.deploy();
+    await rouletteContract.deployed();
+  });
+
+  it("should calculate the payout of multiple winning bets", async function () {
+    const bets = [
+      {kind: 1, param: 0, amount: ethers.utils.parseEther("1.0")}, // wins even money for evens
+      {kind: 103, param: 1, amount: ethers.utils.parseEther("1.0")}, // street wins 11:1 for 1, 2, 3
+    ];
+
+    const spin = 2;
+    const payout = await rouletteContract.calculatePayout(bets, spin);
+    const expectedPayout = ethers.utils.parseEther("14.0"); // 2 for the even, 12 for the street
+    assert.deepStrictEqual(payout, expectedPayout);
+  });
+
+  it("should calculate payout correctly when only some bets win", async function () {
+    const bets = [
+      {kind: 1, param: 0, amount: ethers.utils.parseEther("1.0")}, // wins even money for evens
+      {kind: 103, param: 1, amount: ethers.utils.parseEther("1.0")}, // street wins 11:1 for 1, 2, 3
+    ];
+
+    const spin = 6;
+    const payout = await rouletteContract.calculatePayout(bets, spin);
+    const expectedPayout = ethers.utils.parseEther("2.0"); // 2 for the even, 0 for the street
+    assert.deepStrictEqual(payout, expectedPayout);
+  });
+
+  it("should calculate payout correctly when no bets win", async function () {
+    const bets = [
+      {kind: 1, param: 0, amount: ethers.utils.parseEther("1.0")}, // wins even money for evens
+      {kind: 103, param: 1, amount: ethers.utils.parseEther("1.0")}, // street wins 11:1 for 1, 2, 3
+    ];
+
+    const spin = 5;
+    const payout = await rouletteContract.calculatePayout(bets, spin);
+    const expectedPayout = ethers.utils.parseEther("0.0"); // 2 for the even, 0 for the street
+    assert.deepStrictEqual(payout, expectedPayout);
+  });
+});
