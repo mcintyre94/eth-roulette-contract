@@ -6,7 +6,7 @@ import "hardhat/console.sol";
 contract Roulette {
     uint8 private seed;
 
-    mapping(uint8 => uint8) reds;
+    mapping(uint8 => uint8) private reds;
     mapping(address => uint256) public donations;
     address[] public donationAddresses;
 
@@ -56,7 +56,7 @@ contract Roulette {
 
         // pseudo-random with a seed
         uint8 rouletteSpin = uint8(
-            (block.difficulty + block.timestamp + seed) % 37
+            (block.difficulty + block.timestamp + seed) % 37 // solhint-disable-line
         );
         console.log("Spun the wheel! %d", rouletteSpin);
         seed = rouletteSpin;
@@ -65,7 +65,7 @@ contract Roulette {
 
         if (payout > 0) {
             require(payout < address(this).balance, "Sorry, casino's bust!");
-            (bool success, ) = (msg.sender).call{value: payout}("");
+            (bool success, ) = (msg.sender).call{value: payout}(""); // solhint-disable-line
             require(success, "Failed to pay out, sorry!");
             emit PlayerPayout(requestId, rouletteSpin, payout);
         } else {
@@ -84,7 +84,7 @@ contract Roulette {
         }
         require(
             sum == expectedTotal,
-            "Input bet amounts do not add up to msg value"
+            "Invalid bet amounts"
         );
     }
 
@@ -194,7 +194,7 @@ contract Roulette {
     }
 
     function donate() public payable {
-        require(msg.value > 0, "Sorry but you can't donate nothing!");
+        require(msg.value > 0, "Can't donate 0!");
 
         if (donations[msg.sender] == 0) {
             donationAddresses.push(msg.sender);
