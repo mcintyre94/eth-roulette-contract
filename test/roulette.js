@@ -392,13 +392,13 @@ describe("calculateReturnMultiple", function () {
     it("wins for any of 4 touching numbers", async function () {
       const betParam = 1; // Should match 1, 2, 4, 5
       const result1 = await rouletteContract.calculateReturnMultiple(1, betType, betParam);
-      assert.strictEqual(result1, 8);
+      assert.strictEqual(result1, 9);
       const result2 = await rouletteContract.calculateReturnMultiple(2, betType, betParam);
-      assert.strictEqual(result2, 8);
+      assert.strictEqual(result2, 9);
       const result3 = await rouletteContract.calculateReturnMultiple(4, betType, betParam);
-      assert.strictEqual(result3, 8);
+      assert.strictEqual(result3, 9);
       const result4 = await rouletteContract.calculateReturnMultiple(5, betType, betParam);
-      assert.strictEqual(result4, 8);
+      assert.strictEqual(result4, 9);
     });
 
     it("loses for anything else", async function () {

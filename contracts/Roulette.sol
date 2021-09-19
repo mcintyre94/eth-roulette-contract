@@ -98,7 +98,7 @@ contract Roulette {
             // Corner
             // Param assumed to be top left of the corner, so bet covers the param, the number to its right (+1), the number below (+3), the number below right (+4)
             bool win = rouletteSpin == betParam || rouletteSpin == betParam + 1 || rouletteSpin == betParam + 3 || rouletteSpin == betParam + 4;
-            return win? 8 : 0;
+            return win? 9 : 0;
         } else if(betType == 105) {
             // Line (2 rows)
             // Param assumed to be the top left of the two rows, so win for param to param + 5 (eg 1-6)
