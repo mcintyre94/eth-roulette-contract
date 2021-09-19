@@ -438,6 +438,30 @@ describe("calculateReturnMultiple", function () {
     });
   });
 
+  describe("inside bets: basket", function () {
+    const betType = 106;
+
+    it("wins for any of 0, 1, 2, 3", async function () {
+      const betParam = 0; // Bet is not parameterised
+      const result1 = await rouletteContract.calculateReturnMultiple(0, betType, betParam);
+      assert.strictEqual(result1, 7);
+      const result2 = await rouletteContract.calculateReturnMultiple(1, betType, betParam);
+      assert.strictEqual(result2, 7);
+      const result3 = await rouletteContract.calculateReturnMultiple(2, betType, betParam);
+      assert.strictEqual(result3, 7);
+      const result4 = await rouletteContract.calculateReturnMultiple(3, betType, betParam);
+      assert.strictEqual(result4, 7);
+    });
+
+    it("loses for anything else", async function () {
+      const betParam = 0; // Bet is not parameterised
+      const result1 = await rouletteContract.calculateReturnMultiple(4, betType, betParam);
+      assert.strictEqual(result1, 0);
+      const result2 = await rouletteContract.calculateReturnMultiple(36, betType, betParam);
+      assert.strictEqual(result2, 0);
+    });
+  });
+
   describe("donations", function () {
     let owner;
 

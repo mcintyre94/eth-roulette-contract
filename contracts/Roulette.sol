@@ -104,6 +104,10 @@ contract Roulette {
             // Param assumed to be the top left of the two rows, so win for param to param + 5 (eg 1-6)
             bool win = rouletteSpin >= betParam && rouletteSpin <= betParam + 5;
             return win? 6 : 0;
+        } else if(betType == 106) {
+            // Basket (0,1,2,3)
+            bool win = rouletteSpin <= 3;
+            return win? 7 : 0;
         }
         else {
             revert("Bet type not implemented, sorry!");
